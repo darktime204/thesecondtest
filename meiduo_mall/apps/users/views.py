@@ -1,21 +1,200 @@
+import json
 import re
 from django import http
+from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
 from django_redis import get_redis_connection
 
+from apps.areas.models import Address
 from apps.users.models import User
 from utils.response_code import RETCODE
+from utils.secret import SecretOauth
 
 
+# 11. 修改密码
+class ChangePwdView(LoginRequiredMixin, View):
+    def get(self, request):
+        return render(request, 'user_center_pass.html')
+
+    def post(self, request):
+        user = request.user
+
+        # 1.接收参数
+        old_pwd = request.POST.get('old_pwd')
+        new_pwd = request.POST.get('new_pwd')
+        new_cpwd = request.POST.get('new_cpwd')
+
+        # 2.校验 密码是否正确
+        if not user.check_password(old_pwd):
+            return render(request, 'user_center_pass.html', {'origin_pwd_errmsg': '原始密码错误'})
+
+        # 3. 改密码 set_password()
+        user.set_password(new_pwd)
+        user.save()
+
+        # 4. 清空登录状态, 登录页---清除cookie
+        logout(request)
+        response = redirect(reverse('users:login'))
+        response.delete_cookie('username')
+
+        return response
+
+# 10.新增地址
+class AddressCreateView(LoginRequiredMixin, View):
+    def post(self, request):
+
+        # 判断收货地址 大于 20 个 不在增加
+        # 用户的地址(没有逻辑删除的) .count > 20
+        count = Address.objects.filter(user=request.user, is_deleted=False).count()
+        count = request.user.addresses.filter(is_deleted=False).count()
+
+        if count > 20:
+            return http.JsonResponse({'errmsg': "地址最多20个!"})
+
+        # - 1.接收参数 json  json.loads(request.body.decode())['']
+        json_dict = json.loads(request.body.decode())
+        receiver = json_dict.get('receiver')
+        province_id = json_dict.get('province_id')
+        city_id = json_dict.get('city_id')
+        district_id = json_dict.get('district_id')
+        place = json_dict.get('place')
+        mobile = json_dict.get('mobile')
+        tel = json_dict.get('tel')
+        email = json_dict.get('email')
+
+        # - 2.校验 判空 判正则
+        # - 3. 数据库存储 Address.objects.create()
+        address = Address.objects.create(
+            user=request.user,
+            title=receiver,
+            receiver=receiver,
+            province_id=province_id,
+            city_id=city_id,
+            district_id=district_id,
+            place=place,
+            mobile=mobile,
+            tel=tel,
+            email=email
+        )
+
+        # 判断用户 是否有 默认收货地址
+        if not request.user.default_address:
+            request.user.default_address = address
+            request.user.save()
+
+        # - 4. 构建前端需要的 字典{}
+        address_dict = {
+            "id": address.id,
+            "title": address.title,
+            "receiver": address.receiver,
+            "province": address.province.name,
+            "city": address.city.name,
+            "district": address.district.name,
+            "place": address.place,
+            "mobile": address.mobile,
+            "tel": address.tel,
+            "email": address.email
+        }
+
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '新增地址成功', 'address': address_dict})
+
+
+# 9. 收货地址
+class AddressView(LoginRequiredMixin, View):
+    def get(self, request):
+        # 1.查 当前用户的  未删除 地址
+        addresses = Address.objects.filter(user=request.user, is_deleted=False)
+
+        # 2. 装换前端 数据格式 [{}]
+        addresss_list = []
+        for address in addresses:
+            addresss_list.append({
+                "id": address.id,
+                "title": address.title,
+                "receiver": address.receiver,
+                "province": address.province.name,
+                "city": address.city.name,
+                "district": address.district.name,
+                "place": address.place,
+                "mobile": address.mobile,
+                "tel": address.tel,
+                "email": address.email
+            })
+
+        context = {
+            'default_address_id': request.user.default_address_id,
+            'addresses': addresss_list,
+        }
+        # render--jinja渲染-->js--vue渲染
+        return render(request, 'user_center_site.html', context)
+
+
+# 8.激活邮箱
+class VerifyEmailView(View):
+    def get(self, request):
+        # 1.接收token
+        token = request.GET.get('token')
+
+        # 2.解密
+        token_dict = SecretOauth().loads(token)
+
+        # 3. 取数据库对比
+        try:
+            user = User.objects.get(id=token_dict['user_id'], email=token_dict['email'])
+        except Exception as e:
+            return http.HttpResponseForbidden('token 无效的')
+
+        # 4. 改email_active
+        user.email_active = True
+        user.save()
+
+        # 5.重定向到 用户中心
+        return redirect(reverse('users:info'))
+
+
+# 7. 新增邮箱
+class EmailView(LoginRequiredMixin, View):
+    def put(self, request):
+        # 1.接收参数
+        email = json.loads(request.body.decode()).get('email')
+
+        # 2.正则校验
+
+        # 3.修改 User.objects.filter().update(email=email)
+        # request.user
+        request.user.email = email
+        request.user.save()
+
+        # 发邮件的功能
+        # 生成 激活链接
+        from apps.users.utils import generate_verify_email_url
+        verify_url = generate_verify_email_url(request.user)
+
+        from celery_tasks.email.tasks import send_verify_email
+        send_verify_email.delay(email, verify_url)
+
+        # 4.返回响应对象
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '添加邮箱成功'})
 
 
 # 6.用户中心显示
-class UserInfoView(LoginRequiredMixin,View):
+class UserInfoView(LoginRequiredMixin, View):
     def get(self, request):
-        return render(request, 'user_center_info.html')
+        #  render  前后不分离  -  jinja2模板
+        #  JsonResponse 分录---- vue模板
+
+        #  render 前后不分离  -  jinja2模板-----vue渲染
+        context = {
+            'username': request.user.username,
+            'mobile': request.user.mobile,
+            'email': request.user.email,
+            'email_active': request.user.email_active
+        }
+        return render(request, 'user_center_info.html', context)
+
 
 # 5.退出登录
 class LogoutView(View):

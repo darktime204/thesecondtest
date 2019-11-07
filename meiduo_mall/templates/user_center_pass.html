@@ -80,7 +80,11 @@
                             <input type="password" v-model="new_cpwd" class="new_cpwd" name="new_cpwd"
                                    @blur="check_cpwd">
                             <span class="new_cpwd_error" v-show="error_cpwd">两次输入的密码不一致</span>
+                             {% if origin_pwd_errmsg %}
+                            <span class="new_cpwd_error" >密码不正确</span>
+                            {% endif %}
                         </div>
+
                         <input type="submit" name="" value="确 定" class="info_submit">
                         <input type="reset" name="" value="取 消" class="info_submit info_reset">
                     </form>

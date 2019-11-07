@@ -28,7 +28,11 @@ urlpatterns = [
     # 3.图片验证码
     url(r'^', include('apps.verifications.urls')),
 
-    # url(r'^', include('apps.oauth.urls',namespace="qq")),
+    # 4.QQ登录
+    url(r'^', include('apps.oauth.urls',namespace="qq")),
+
+    # 5.省市区
+    url(r'^', include('apps.areas.urls')),
 
 
 ]

@@ -70,14 +70,27 @@
 				<div class="info_con clearfix">
 					<h3 class="common_title2">基本信息</h3>
 					<ul class="user_info_list">
-						<li><span>用户名：</span>张山</li>
-						<li><span>联系方式：</span>18500001111</li>
-						<li>
-	                    <span>Email：</span>
-	                    <input type="text" name="email" class="email">
-	                    <input type="button" name="" value="保 存">
-	                    <input type="reset" name="" value="取 消">
-	                	</li>			
+						<li><span>用户名：</span>[[ username]]</li>
+						<li><span>联系方式：</span>[[mobile]]</li>
+                         <li>
+            <span>Email：</span>
+            <div v-if="set_email">
+                <input v-model="email" @blur="check_email" type="email" name="email" class="email">
+                <input @click="save_email" type="button" name="" value="保 存">
+                <input @click="cancel_email" type="reset" name="" value="取 消">
+                <div v-show="error_email" class="error_email_tip">邮箱格式错误</div>
+            </div>
+            <div v-else>
+                <input v-model="email" type="email" name="email" class="email" readonly>
+                <div v-if="email_active">
+                    已验证
+                </div>
+                <div v-else>
+                    待验证<input @click="save_email" :disabled="send_email_btn_disabled" type="button" :value="send_email_tip">
+                </div>
+            </div>
+        </li>
+
 					</ul>
 				</div>
 				
@@ -115,7 +128,7 @@
 				</li>
 
 				<li>
-					<a href="detail.html"><img src="{{ static('images/goods/goods006.jpg') }}></a>
+					<a href="detail.html"><img src="{{ static('images/goods/goods006.jpg') }}"></a>
 					<h4><a href="#">360手机 N6 Pro 全网通</a></h4>
 					<div class="operate">
 						<span class="price">￥2699.00</span>
@@ -152,6 +165,15 @@
 		<p>电话：010-****888    京ICP备*******8号</p>
 	</div>
 	</div>
+    <script>
+
+        let username = "{{ username  }}"
+        let mobile = "{{ mobile  }}"
+        let email = "{{ email  }}"
+        let email_active = "{{ email_active }}"
+
+    </script>
+    <script type="text/javascript" src="{{ static('js/common.js') }}"></script>
 	<script type="text/javascript" src="{{ static('js/user_center_info.js') }}"></script>
 </body>
 </html>

@@ -3,11 +3,11 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
 	<title>美多商城-登录</title>
-	<link rel="stylesheet" type="text/css" href="{{ static('css/reset.css')}}">
-	<link rel="stylesheet" type="text/css" href="{{ static('css/main.css')}}">
-    <script type="text/javascript" src="{{ static('js/host.js')}}"></script>
-	<script type="text/javascript" src="{{ static('js/vue-2.5.16.js')}}"></script>
-    <script type="text/javascript" src="{{ static('js/axios-0.18.0.min.js')}}"></script>
+	<link rel="stylesheet" type="text/css" href="css/reset.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+    <script type="text/javascript" src="js/host.js"></script>
+	<script type="text/javascript" src="js/vue-2.5.16.js"></script>
+    <script type="text/javascript" src="js/axios-0.18.0.min.js"></script>
 </head>
 <body>
 	<div id="app" v-cloak>
@@ -45,9 +45,9 @@
 					</div>
 				</div>
 				<div class="third_party">
-					<a href="javascript:;" @click="qq_login" class="qq_login">QQ</a>
+					<a href="javascript:;" class="qq_login">QQ</a>
 					<a href="#" class="weixin_login">微信</a>
-                    <a href="#" @click="weibo_login" class="weibo_login" style="background: url('/static/images/weibo16.png') no-repeat 7px"> &nbsp;&nbsp;微博</a>
+                    <a href="#" @click="weibo_login" class="weibo_login" style="background: url('images/weibo16.png') no-repeat 7px"> &nbsp;&nbsp;微博</a>
 					<a href="register.html" class="register_btn">立即注册</a>
 				</div>
 

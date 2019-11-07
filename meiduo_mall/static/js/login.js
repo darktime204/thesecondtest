@@ -49,6 +49,7 @@ var vm = new Vue({
                     responseType: 'json'
                 })
                 .then(response => {
+                    //前端重定向
                     location.href = response.data.login_url;
                 })
                 .catch(error => {

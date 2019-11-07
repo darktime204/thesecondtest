@@ -22,6 +22,7 @@ print(BASE_DIR)
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+
 SECRET_KEY = 's3rwdxr9jggzexpbn-&u2@=qctw_q0u0m57u#nwnk9=zyf&nv*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -45,6 +46,8 @@ INSTALLED_APPS = [
     'apps.contents',
     'apps.verifications',
     'apps.oauth',
+    'apps.areas',
+    'apps.goods',
 ]
 
 MIDDLEWARE = [
@@ -233,4 +236,19 @@ AUTHENTICATION_BACKENDS = ['apps.users.utils.UsernameMobileAuthBackend']
 
 # 重定向 登录路由
 LOGIN_URL = '/login/'
+
+# QQ登录
+QQ_CLIENT_ID = '101518219'
+QQ_CLIENT_SECRET = '418d84ebdc7241efb79536886ae95224'
+QQ_REDIRECT_URI = 'http://www.meiduo.site:8000/oauth_callback'
+
+
+# 发邮件配置
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' # 指定邮件后端
+EMAIL_HOST = 'smtp.163.com' # 发邮件主机
+EMAIL_PORT = 25 # 发邮件端口
+EMAIL_HOST_USER = 'hmmeiduo@163.com' # 授权的邮箱
+EMAIL_HOST_PASSWORD = 'hmmeiduo123' # 邮箱授权时获得的密码，非注册登录密码
+EMAIL_FROM = '美多商城<hmmeiduo@163.com>' # 发件人抬头
+EMAIL_ACTIVE_URL = 'http://www.meiduo.site:8000/emails/verification/' #激活地址
 
